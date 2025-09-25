@@ -1,10 +1,21 @@
-FROM python:3.13
+FROM python:3.13-slim
 
 WORKDIR /app
 
+# Копируем зависимости
 COPY pyproject.toml poetry.lock* ./
-RUN pip install poetry && poetry install --no-root
 
+# Устанавливаем Poetry и зависимости
+RUN pip install --upgrade pip \
+    && pip install poetry \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-root --no-interaction --no-ansi
+
+# Копируем весь проект
 COPY . .
 
-CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Открываем порт
+EXPOSE 8000
+
+# Команда запуска
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

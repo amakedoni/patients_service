@@ -1,28 +1,37 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
-from sqlalchemy.orm import relationship
-from app.core.db import Base
-import datetime
+# app/models.py
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
+from sqlalchemy.orm import relationship, declarative_base
+
+Base = declarative_base()
 
 class Patient(Base):
     __tablename__ = "patients"
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    birth_date = Column(String, nullable=True)
-    prescriptions = relationship("Prescription", back_populates="patient", cascade="all, delete")
+    birth_date = Column(Date, nullable=False)
+
+    prescriptions = relationship("Prescription", back_populates="patient", cascade="all, delete-orphan")
+    intakes = relationship("Intake", back_populates="patient", cascade="all, delete-orphan")
+
 
 class Prescription(Base):
     __tablename__ = "prescriptions"
+
     id = Column(Integer, primary_key=True, index=True)
-    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"))
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
     drug_name = Column(String, nullable=False)
     dosage = Column(String, nullable=False)
+
     patient = relationship("Patient", back_populates="prescriptions")
-    intakes = relationship("Intake", back_populates="prescription", cascade="all, delete")
+
 
 class Intake(Base):
     __tablename__ = "intakes"
+
     id = Column(Integer, primary_key=True, index=True)
-    prescription_id = Column(Integer, ForeignKey("prescriptions.id", ondelete="CASCADE"))
-    taken_at = Column(DateTime, default=datetime.datetime.utcnow)
-    taken = Column(Boolean, default=False)
-    prescription = relationship("Prescription", back_populates="intakes")
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    time = Column(String, nullable=False)  # можно сделать DateTime, если нужно
+    amount = Column(String, nullable=False)
+
+    patient = relationship("Patient", back_populates="intakes")
