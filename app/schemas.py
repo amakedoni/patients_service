@@ -1,8 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-# ---- SCHEMAS FOR PRESCRIPTIONS ----
+# ------------------- SCHEMAS FOR PRESCRIPTIONS -------------------
+
 class PrescriptionBase(BaseModel):
     drug_name: str
     dosage: str
@@ -14,11 +15,13 @@ class Prescription(PrescriptionBase):
     id: int
     patient_id: int
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
-# ---- SCHEMAS FOR INTAKES ----
+
+# ------------------- SCHEMAS FOR INTAKES -------------------
+
 class IntakeBase(BaseModel):
-    intake_time: str  # можно менять на datetime если нужно
+    intake_time: datetime  # меняем на datetime для точного времени
     amount: str
 
 class IntakeCreate(IntakeBase):
@@ -28,9 +31,11 @@ class Intake(IntakeBase):
     id: int
     patient_id: int
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
-# ---- SCHEMAS FOR PATIENT ----
+
+# ------------------- SCHEMAS FOR PATIENT -------------------
+
 class PatientBase(BaseModel):
     name: str
     birth_date: date
@@ -40,7 +45,7 @@ class PatientCreate(PatientBase):
 
 class Patient(PatientBase):
     id: int
-    prescriptions: Optional[List[Prescription]] = []
-    intakes: Optional[List[Intake]] = []
+    prescriptions: List[Prescription] = []
+    intakes: List[Intake] = []
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)

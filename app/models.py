@@ -1,8 +1,6 @@
-# app/models.py
 from sqlalchemy import Column, Integer, String, Date, ForeignKey
-from sqlalchemy.orm import relationship, declarative_base
-
-Base = declarative_base()
+from sqlalchemy.orm import relationship
+from app.core.db import Base  # Base из db.py
 
 class Patient(Base):
     __tablename__ = "patients"
@@ -31,7 +29,7 @@ class Intake(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
-    time = Column(String, nullable=False)  # можно сделать DateTime, если нужно
+    time = Column(String, nullable=False)
     amount = Column(String, nullable=False)
 
     patient = relationship("Patient", back_populates="intakes")
