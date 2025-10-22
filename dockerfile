@@ -1,21 +1,16 @@
 FROM python:3.13-slim
 
-WORKDIR /app
+WORKDIR /code
+ENV PYTHONPATH=/code
+COPY pyproject.toml poetry.lock* /code/
 
-# Копируем зависимости
-COPY pyproject.toml poetry.lock* ./
+RUN apt-get update && apt-get install -y build-essential libpq-dev && rm -rf /var/lib/apt/lists/*
+RUN pip install --upgrade pip
+RUN pip install poetry
+RUN pip install fastapi
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-root
+RUN pip install psycopg2
+COPY . /code
 
-# Устанавливаем Poetry и зависимости
-RUN pip install --upgrade pip \
-    && pip install poetry \
-    && poetry config virtualenvs.create false \
-    && poetry install --no-root --no-interaction --no-ansi
-
-# Копируем весь проект
-COPY . .
-
-# Открываем порт
-EXPOSE 8000
-
-# Команда запуска
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
