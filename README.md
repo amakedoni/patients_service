@@ -13,7 +13,7 @@
 
 ## 🧩 Архитектура проекта
 ```
-backend/
+patients_service/
 ├── .env
 ├── alembic.ini
 ├── docker-compose.yml
@@ -65,7 +65,7 @@ docker compose version
 2. Запуск проекта
 Перейди в папку проекта:
 ```bash
-cd backend
+cd patients_service
 ```
 Собери и запусти контейнеры:
 ```bash
