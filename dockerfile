@@ -11,6 +11,7 @@ RUN pip install fastapi
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-root
 RUN pip install psycopg2
+RUN pip install pydantic_settings
 COPY . /code
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

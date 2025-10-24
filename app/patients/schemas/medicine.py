@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
+from datetime import datetime
 
 class MedicineForm(str, Enum):
     tablet = "tablet"
@@ -31,7 +32,8 @@ class MedicineCreate(BaseModel):
 
 class MedicineOut(MedicineCreate):
     id: int
-    created_at: Optional[str]
+    created_at: Optional[datetime] = None  
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
