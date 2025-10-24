@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import text, select
 from typing import List
-
+from app.patients.models.user import User
+from app.patients.models.relation import UserRelation
 from app.db.session import get_db
 from app.patients import service
 from app.patients.schemas.user import UserCreate, UserOut
@@ -65,3 +66,57 @@ async def ping():
     async with engine.connect() as conn:
         result = await conn.execute(text("SELECT 1"))
         return {"db": bool(result.scalar())}
+
+
+@router.post("/users/{user_id}/friends/{friend_id}")
+async def add_friend(user_id: int, friend_id: int, db: AsyncSession = Depends(get_db)):
+    if user_id == friend_id:
+        raise HTTPException(status_code=400, detail="Нельзя добавить самого себя в мед-друзья")
+
+    users = await db.execute(select(User).where(User.id.in_([user_id, friend_id])))
+    found = users.scalars().all()
+    if len(found) != 2:
+        raise HTTPException(status_code=404, detail="Один из пользователей не найден")
+
+    existing = await db.execute(
+        select(UserRelation).where(
+            UserRelation.user_id == user_id,
+            UserRelation.friend_id == friend_id
+        )
+    )
+    if existing.scalar():
+        raise HTTPException(status_code=400, detail="Мед-друг уже добавлен")
+
+    relation = UserRelation(user_id=user_id, friend_id=friend_id)
+    db.add(relation)
+    await db.commit()
+    await db.refresh(relation)
+
+    return {
+        "message": "Мед-друг успешно добавлен",
+        "relation_id": relation.id,
+        "created_at": relation.created_at
+    }
+
+@router.get("/users/{user_id}/friends")
+async def list_friends(user_id: int, db: AsyncSession = Depends(get_db)):
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+    result = await db.execute(
+        select(UserRelation).where(UserRelation.user_id == user_id)
+    )
+    relations = result.scalars().all()
+
+    friends_data = []
+    for rel in relations:
+        friend = await db.get(User, rel.friend_id)
+        if friend:
+            friends_data.append({
+                "id": friend.id,
+                "uuid": str(friend.uuid),
+                "created_at": friend.created_at
+            })
+
+    return friends_data
